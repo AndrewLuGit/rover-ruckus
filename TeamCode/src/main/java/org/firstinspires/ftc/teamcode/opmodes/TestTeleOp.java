@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.Subsystems.ConfigConstants;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.Subsystems.TankDrive;
 
 @TeleOp(name = "TeleOp", group = "TeleOp")
 public class TestTeleOp extends OpMode{
@@ -12,7 +12,7 @@ public class TestTeleOp extends OpMode{
 
     private Robot robot;
 
-    private Boolean slowMode, superSlowMode;
+    private Boolean slowMode = false, superSlowMode = false;
 
     @Override
     public void init() {
@@ -35,19 +35,9 @@ public class TestTeleOp extends OpMode{
         if (stickyGamepad1.b) {
             slowMode = !slowMode;
             superSlowMode = false;
-            if (slowMode) {
-                robot.drive.setVelocityPIDCoefficients(ConfigConstants.SLOW_VELOCITY_PID);
-            } else {
-                robot.drive.setVelocityPIDCoefficients(ConfigConstants.NORMAL_VELOCITY_PID);
-            }
         } else if (stickyGamepad1.left_bumper) {
             superSlowMode = !superSlowMode;
             slowMode = false;
-            if (superSlowMode) {
-                robot.drive.setVelocityPIDCoefficients(ConfigConstants.SLOW_VELOCITY_PID);
-            } else {
-                robot.drive.setVelocityPIDCoefficients(ConfigConstants.NORMAL_VELOCITY_PID);
-            }
         }
 
         double x = 0, omega;

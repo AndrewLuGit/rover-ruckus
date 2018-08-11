@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
 import com.qualcomm.robotcore.util.GlobalWarningSource;
+import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.ThreadPool;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeManagerImpl;
@@ -41,7 +42,7 @@ public class Robot implements OpModeManagerNotifier.Notifications, GlobalWarning
 
     private List<Listener> listeners;
 
-    private Boolean started;
+    private Boolean started = false;
 
     private Runnable systemUpdateRunnable = () -> {
         while (!Thread.currentThread().isInterrupted()) {
@@ -129,6 +130,7 @@ public class Robot implements OpModeManagerNotifier.Notifications, GlobalWarning
         telemetryPacketQueue = new ArrayBlockingQueue<>(10);
 
         subsystemsWithProblems = new ArrayList<>();
+        RobotLog.registerGlobalWarningSource(this);
 
         cycleLatches = new ArrayList<>();
     }
@@ -155,6 +157,8 @@ public class Robot implements OpModeManagerNotifier.Notifications, GlobalWarning
             telemetryUpdateExecutor.shutdownNow();
             telemetryUpdateExecutor = null;
         }
+
+        RobotLog.unregisterGlobalWarningSource(this);
     }
 
     public void waitForNextCycle() {
@@ -195,7 +199,7 @@ public class Robot implements OpModeManagerNotifier.Notifications, GlobalWarning
                 warnings.add("Problem with " + subsystem.getClass().getSimpleName());
             }
         }
-        return null;
+        return RobotLog.combineGlobalWarnings(warnings);
     }
 
     @Override
