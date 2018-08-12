@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.enhancedDrivers;
 
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class Encoder {
@@ -29,6 +28,16 @@ public class Encoder {
     public int getTicks(){
         return getRawTicks() - resetTicks;
     }
+    public double getRadians() {
+        return toRadians(getTicks());
+    }
+    public double getRawRadians() {
+        return toRadians(getRawTicks());
+    }
+
+    public double toRadians(int ticks) {
+        return ticks / PPR * Math.PI * 2;
+    }
 
     public void setDirection(DcMotorSimple.Direction direction){
         if (direction == DcMotorSimple.Direction.REVERSE) {
@@ -36,5 +45,19 @@ public class Encoder {
         } else {
             secant = 0;
         }
+    }
+
+    private int lastTicks = 0;
+
+    public int tickChange() {
+        int ticks = getTicks();
+        int change = ticks - lastTicks;
+        lastTicks = ticks;
+        return change;
+    }
+
+    public double radiansChange() {
+        int change = tickChange();
+        return toRadians(change);
     }
 }

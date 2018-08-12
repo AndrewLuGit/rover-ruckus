@@ -55,4 +55,24 @@ public class ExpansionHub {
     public Boolean getDigitalInput(int digitalInputZ) {
         return response!=null && response.getDigitalInput(digitalInputZ);
     }
+    public double getAnalogInput(int inputZ) {
+        if (response != null){
+            return response.getAnalogInput(inputZ);
+        } else {
+            return 0;
+        }
+    }
+    public int getVelocity(int motorZ) {
+        if (response != null){
+            return response.getVelocity(motorZ);
+        } else {
+            return 0;
+        }
+    }
+    public Boolean isAtTarget(int motorZ) {
+        return response != null && response.isAtTarget(motorZ);
+    }
+    public Boolean isOverCurrent(int motorZ) {
+        return response != null && response.isOverCurrent(motorZ);
+    }
 }

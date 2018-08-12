@@ -31,11 +31,18 @@ public class TankDrive extends Subsystem {
         OPEN_LOOP,
     }
 
-    public static final String[] MOTOR_NAMES = {"tankLeft","tankRight"};
+    public static final String[] LEFT_MOTOR_NAMES = {"tankLeft"};
+    public static final String[] RIGHT_MOTOR_NAMES = {"tankRight"};
+    public static final int LEFT_MOTOR_NUMBER = LEFT_MOTOR_NAMES.length;
+    public static final int RIGHT_MOTOR_NUMBER = RIGHT_MOTOR_NAMES.length;
 
     public static final double RADIUS = 1.9685;
+    public static final double TRACK_WIDTH = 17;
+    public static final double GEAR_RATIO = 2;
 
-    private DcMotorEx[] motors;
+    private DcMotorEx[] leftMotors;
+    private DcMotorEx[] rightMotors;
+    public double ticksPerRev = leftMotors[0].getMotorType().getTicksPerRev();
 
     private int[] driveEncoderOffsets;
     private boolean useCachedDriveEncoderPositions;
@@ -50,6 +57,8 @@ public class TankDrive extends Subsystem {
     private double targetX = 0;
 
     private LynxModule Hub1;
+
+    public TankDriveUtil tankDriveUtil = new TankDriveUtil(TRACK_WIDTH, leftMotors, rightMotors, RADIUS, ticksPerRev, GEAR_RATIO);
 
     private TelemetryData telemetryData;
 
@@ -75,20 +84,31 @@ public class TankDrive extends Subsystem {
 
         powers = new double[2];
         driveEncoderOffsets = new int[4];
-        motors = new DcMotorEx[2];
-        for (int i = 0; i<2; i++) {
-            DcMotorEx dcMotorEx = map.get(DcMotorEx.class, MOTOR_NAMES[i]);
-            motors[i] = new CachingDcMotorEx(dcMotorEx);
-            motors[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motors[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftMotors = new DcMotorEx[LEFT_MOTOR_NUMBER];
+        for (int i = 0; i < LEFT_MOTOR_NUMBER; i ++) {
+            DcMotorEx dcMotorEx = map.get(DcMotorEx.class, LEFT_MOTOR_NAMES[i]);
+            leftMotors[i] = new CachingDcMotorEx(dcMotorEx);
+            leftMotors[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftMotors[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftMotors[i].setDirection(DcMotorSimple.Direction.REVERSE);
         }
-        motors[1].setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotors = new DcMotorEx[RIGHT_MOTOR_NUMBER];
+        for (int i = 0; i < RIGHT_MOTOR_NUMBER; i ++) {
+            DcMotorEx dcMotorEx = map.get(DcMotorEx.class, LEFT_MOTOR_NAMES[i]);
+            rightMotors[i] = new CachingDcMotorEx(dcMotorEx);
+            rightMotors[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightMotors[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightMotors[i].setDirection(DcMotorSimple.Direction.FORWARD);
+        }
 
         resetDriveEncoders();
     }
 
-    public DcMotor[] getMotors() {
-        return motors;
+    public DcMotor[] getLeftMotors() {
+        return leftMotors;
+    }
+    public DcMotor[] getRightMotors() {
+        return rightMotors;
     }
 
     private void setMode(Mode mode) {
@@ -169,7 +189,6 @@ public class TankDrive extends Subsystem {
     }
 
     private double driveEncoderTicksToRadians(int ticks) {
-        double ticksPerRev = motors[0].getMotorType().getTicksPerRev();
         return 2 * ticks / ticksPerRev;
     }
 
@@ -178,8 +197,11 @@ public class TankDrive extends Subsystem {
     }
 
     public void setVelocityPIDCoefficients(PIDCoefficients pidCoefficients) {
-        for (int i = 0; i < 2; i ++) {
-            motors[i].setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidCoefficients);
+        for (DcMotorEx leftMotor : leftMotors) {
+            leftMotor.setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidCoefficients);
+        }
+        for (DcMotorEx rightMotor : rightMotors) {
+            rightMotor.setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidCoefficients);
         }
     }
 
@@ -190,14 +212,12 @@ public class TankDrive extends Subsystem {
 
         updatePowers();
 
-        for (int i = 0; i < 2; i ++) {
-            motors[i].setPower(powers[i]);
-        }
+        tankDriveUtil.setMotorPowers(powers[0],powers[1]);
 
         telemetryData.leftPower = powers[0];
         telemetryData.rightPower = powers[1];
-        telemetryData.leftPower = motors[0].getVelocity(AngleUnit.RADIANS);
-        telemetryData.rightPower = motors[1].getVelocity(AngleUnit.RADIANS);
+        telemetryData.leftPower = leftMotors[0].getVelocity(AngleUnit.RADIANS);
+        telemetryData.rightPower = leftMotors[0].getVelocity(AngleUnit.RADIANS);
 
         return TelemetryUtil.objectToMap(telemetryData);
     }
